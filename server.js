@@ -1,8 +1,19 @@
 const express = require("express");
 const mysql = require("mysql2/promise");
+const cors = require("cors");
 require("dotenv").config();
 
 const app = express();
+
+// ✅ allow your React dev server to call this API
+app.use(
+    cors({
+        origin: ["http://localhost:3000"],
+        methods: ["GET", "POST", "PUT", "DELETE"],
+    })
+);
+app.options("*", cors());
+
 app.use(express.json());
 
 const port = process.env.PORT || 3000;
@@ -17,7 +28,7 @@ const dbConfig = {
     waitForConnections: true,
     connectionLimit: 10,
     queueLimit: 0,
-    ssl: { rejectUnauthorized: false }, // add if you are using Aiven SSL
+    ssl: { rejectUnauthorized: false },
 };
 
 // Root route
