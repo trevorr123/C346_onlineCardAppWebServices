@@ -7,7 +7,7 @@ const app = express();
 
 app.use(express.json());
 
-const port = process.env.PORT || 3000;
+const port = process.env.PORT || 5000;
 
 // database config info
 const dbConfig = {
@@ -94,6 +94,62 @@ app.post("/addcard", async (req, res) => {
         if (connection) await connection.end();
     }
 });
+
+// Update a card
+app.put("/updatecard/:id", async (req, res) => {
+    const { id } = req.params;
+    const { card_name, card_pic } = req.body;
+
+    if (!card_name || !card_pic) {
+        return res.status(400).json({ message: "Missing card_name or card_pic" });
+    }
+
+    let connection;
+    try {
+        connection = await mysql.createConnection(dbConfig);
+        const [result] = await connection.execute(
+            "UPDATE cards SET card_name = ?, card_pic = ? WHERE id = ?",
+            [card_name, card_pic, id]
+        );
+
+        if (result.affectedRows === 0) {
+            return res.status(404).json({ message: "Card not found" });
+        }
+
+        res.json({ message: "Card updated successfully" });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ message: "Server Error - could not update card" });
+    } finally {
+        if (connection) await connection.end();
+    }
+});
+
+// Delete a card
+app.delete("/deletecard/:id", async (req, res) => {
+    const { id } = req.params;
+
+    let connection;
+    try {
+        connection = await mysql.createConnection(dbConfig);
+        const [result] = await connection.execute(
+            "DELETE FROM cards WHERE id = ?",
+            [id]
+        );
+
+        if (result.affectedRows === 0) {
+            return res.status(404).json({ message: "Card not found" });
+        }
+
+        res.json({ message: "Card deleted successfully" });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ message: "Server Error - could not delete card" });
+    } finally {
+        if (connection) await connection.end();
+    }
+});
+
 
 app.listen(port, () => {
     console.log("Server running on port", port);
